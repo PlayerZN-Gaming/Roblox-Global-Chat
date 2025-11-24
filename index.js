@@ -1,55 +1,50 @@
-// index.js — Single File Global Chat Server (WebSocket API)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSocket API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      padding: 40px;
+      color: #111;
+    }
+    .box {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h1 { margin-top: 0; }
+    code {
+      background: #eee;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>WebSocket API</h1>
+    <p>This project includes a WebSocket API endpoint.</p>
 
-const http = require("http");
-const WebSocket = require("ws");
+    <p>Connect using WebSocket at:</p>
+    <p><code>wss://YOUR-PROJECT.vercel.app/api/ws</code></p>
 
-const PORT = process.env.PORT || 3000;
+    <p>To use it, open your WebSocket client and send JSON like:</p>
 
-// Create HTTP server (required for WebSockets on platforms like Railway)
-const server = http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end("WebSocket Global Chat API is running.\n");
-});
+    <pre>
+{
+  "username": "Test",
+  "message": "Hello"
+}
+    </pre>
 
-// Create WebSocket server
-const wss = new WebSocket.Server({ server });
-
-// Connected clients
-let clients = [];
-
-wss.on("connection", (socket) => {
-    console.log("[WS] Client connected");
-    clients.push(socket);
-
-    socket.on("message", (raw) => {
-        try {
-            const data = JSON.parse(raw);
-
-            // Expected format: { username, message }
-            if (!data.username || !data.message) return;
-
-            const outgoing = JSON.stringify({
-                username: data.username,
-                message: data.message
-            });
-
-            // broadcast to all clients
-            clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(outgoing);
-                }
-            });
-        } catch (e) {
-            console.log("Invalid JSON:", e);
-        }
-    });
-
-    socket.on("close", () => {
-        console.log("[WS] Client disconnected");
-        clients = clients.filter((c) => c !== socket);
-    });
-});
-
-server.listen(PORT, () => {
-    console.log("Server running on port:", PORT);
-});
+    <p>This homepage is only here to explain the API.</p>
+  </div>
+</body>
+</html>
