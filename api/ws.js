@@ -1,39 +1,40 @@
-export const config = {
-  runtime: "edge",
-};
+// /api/ws.js — WebSocket chat server for Render
 
-export default async function handler(req) {
-  if (req.headers.get("upgrade") !== "websocket") {
-    return new Response("This endpoint only accepts WebSocket connections.", {
-      status: 400,
-    });
-  }
+import { WebSocketServer } from "ws";
 
-  const { socket, response } = Deno.upgradeWebSocket(req);
+export default function createWSS(server) {
+  const wss = new WebSocketServer({ noServer: true });
 
-  socket.onopen = () => {
-    console.log("Client connected.");
-  };
+  wss.on("connection", (socket) => {
+    console.log("Client connected");
 
-  socket.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
+    socket.on("message", (raw) => {
+      try {
+        const data = JSON.parse(raw);
 
-      // Expected: { username, message }
-      socket.send(
-        JSON.stringify({
+        if (!data.username || !data.message) return;
+
+        const sendData = JSON.stringify({
           username: data.username,
-          message: data.message,
-        })
-      );
-    } catch (err) {
-      console.error("Invalid message:", err);
-    }
-  };
+          message: data.message
+        });
 
-  socket.onclose = () => {
-    console.log("Client disconnected.");
-  };
+        // broadcast to all connected
+        wss.clients.forEach((client) => {
+          if (client.readyState === 1) {
+            client.send(sendData);
+          }
+        });
 
-  return response;
+      } catch (err) {
+        console.log("Invalid JSON:", err);
+      }
+    });
+
+    socket.on("close", () => {
+      console.log("Client disconnected");
+    });
+  });
+
+  return wss;
 }
